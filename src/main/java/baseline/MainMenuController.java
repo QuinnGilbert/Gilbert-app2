@@ -77,7 +77,7 @@ public class MainMenuController {
     void remove(ActionEvent event) {
         InventoryItem.removeSerial(table.getSelectionModel().getSelectedItem().getSerial());
         data.removeAll(table.getSelectionModel().getSelectedItem());
-        table.getItems().removeAll(table.getSelectionModel().getSelectedItem());
+        table.setItems(data);
     }
 
     @FXML

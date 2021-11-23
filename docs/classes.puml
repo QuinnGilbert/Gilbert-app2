@@ -1,0 +1,52 @@
+@startuml
+
+MainMenuController *--InventoryItem
+
+class InventoryManagementApplication{
+    start()
+    main()
+}
+
+class MainMenuController{
+    - TextField searchName
+    - TextField searchSerial
+    - Button addButton
+    - TextField addName
+    - TextField addSerial
+    - TextField addValue
+    - Button clearButton
+    - Button loadButton
+    - Button saveButton
+    - TableView<InventoryItem> table
+    - ObservableList<InventoryItem> data
+    addData()
+    clearAll()
+    loadTable()
+    remove()
+    saveTable()
+    tableKeyPressed()
+    updateSearchName()
+    updateSearchSerial()
+}
+
+class InventoryItem{
+    {static} HashSet<String> serialSet
+    String name
+    String serial
+    String value
+    + getName()
+    + setName()
+    + getSerial()
+    + setSerial()
+    + getValue()
+    + setValue()
+    + boolean testName()
+    + boolean testSerial()
+    + boolean testValue()
+    +{static} addSerial()
+    +{static} removeSerial()
+    +{static} clearSerial()
+}
+
+
+@enduml

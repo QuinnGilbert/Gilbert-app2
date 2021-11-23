@@ -1,4 +1,4 @@
-#User Guide
+# User Guide
 
 To add a new item, enter all values and press enter
 

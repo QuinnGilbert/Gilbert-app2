@@ -18,10 +18,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import javax.swing.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,9 +33,6 @@ public class MainMenuController {
     private TextField searchSerial;
 
     @FXML
-    private Button addButton;
-
-    @FXML
     private TextField addName;
 
     @FXML
@@ -45,15 +40,6 @@ public class MainMenuController {
 
     @FXML
     private TextField addValue;
-
-    @FXML
-    private Button clearButton;
-
-    @FXML
-    private Button loadButton;
-
-    @FXML
-    private Button saveButton;
 
     @FXML
     private TableView<InventoryItem> table;
@@ -87,12 +73,15 @@ public class MainMenuController {
     }
 
     @FXML
+    //removes currently highlighted value
     void remove(ActionEvent event) {
         InventoryItem.removeSerial(table.getSelectionModel().getSelectedItem().getSerial());
+        data.removeAll(table.getSelectionModel().getSelectedItem());
         table.getItems().removeAll(table.getSelectionModel().getSelectedItem());
     }
 
     @FXML
+    //used to call remove()
     void tableKeyPressed(KeyEvent event) {
         if(event.getCode()== KeyCode.DELETE){
             remove(new ActionEvent());
@@ -100,32 +89,33 @@ public class MainMenuController {
     }
 
     @FXML
+    //remove all values from list
     void clearAll(ActionEvent event) {
-        //remove all values from list
         data.clear();
         InventoryItem.clearSerialSet();
     }
 
     @FXML
+    //saves value to chosen file type in chosen location
     void saveTable(ActionEvent event) {
         //Open file
         FileChooser fileChooser = new FileChooser();
-        FileChooser.ExtensionFilter HTML = new FileChooser.ExtensionFilter("HTML","*.html");
-        FileChooser.ExtensionFilter JSON = new FileChooser.ExtensionFilter("JSON","*.json");
-        FileChooser.ExtensionFilter TSV = new FileChooser.ExtensionFilter("TSV","*.txt");
-        fileChooser.getExtensionFilters().addAll(HTML,JSON,TSV);
+        FileChooser.ExtensionFilter html = new FileChooser.ExtensionFilter("HTML","*.html");
+        FileChooser.ExtensionFilter json = new FileChooser.ExtensionFilter("JSON","*.json");
+        FileChooser.ExtensionFilter tsv = new FileChooser.ExtensionFilter("TSV","*.txt");
+        fileChooser.getExtensionFilters().addAll(html,json,tsv);
         Stage stage = new Stage();
         File file = fileChooser.showSaveDialog(stage);
 
         System.out.println(getExtension(file));
         if(getExtension(file).equals("txt")){
-            saveTSV(file);
+            saveTSV(file, data);
         }
         if(getExtension(file).equals("html")){
-            saveHTML(file);
+            saveHTML(file, data);
         }
         if(getExtension(file).equals("json")){
-            saveJSON(file);
+            saveJSON(file, data);
         }
         //get string with properly formatted data
         //save data to file
@@ -136,10 +126,10 @@ public class MainMenuController {
         return filename.substring(filename.lastIndexOf(".") + 1);
     }
 
-    void saveTSV(File file){
-        StringBuilder listData=new StringBuilder("SerialNumber\tName\tValue\n");
+    void saveTSV(File file, ObservableList<InventoryItem> data){
+        StringBuilder listData=new StringBuilder("SerialNumber\tName\tValue");
         for(InventoryItem i : data){
-            listData.append(i.getSerial()+"\t"+i.getName()+"\t"+i.getValue()+"\n");
+            listData.append("\n"+i.getSerial()+"\t"+i.getName()+"\t"+i.getValue());
         }
 
         if(file!=null){
@@ -153,7 +143,7 @@ public class MainMenuController {
         }
     }
 
-    void saveHTML(File file){
+    void saveHTML(File file, ObservableList<InventoryItem> data){
         StringBuilder listData=new StringBuilder("<!DOCTYPE html><html><body><table>\n<tr><th>Serial</th><th>Name</th><th>Value</th></tr>\n");
         for(InventoryItem i : data){
             listData.append("<tr><td>"+i.getSerial()+"</td><td>"+i.getName()+"</td><td>"+i.getValue()+"</td></tr>\n");
@@ -170,7 +160,7 @@ public class MainMenuController {
         }
     }
 
-    void saveJSON(File file){
+    void saveJSON(File file, ObservableList<InventoryItem> data){
 
         ArrayList<String> name = new ArrayList<>();
         ArrayList<String> serial = new ArrayList<>();
@@ -209,24 +199,26 @@ public class MainMenuController {
     }
 
     @FXML
+    //loads chosen file into table
     void loadTable(ActionEvent event) {
         //open file
         FileChooser fileChooser = new FileChooser();
         FileChooser.ExtensionFilter ext = new FileChooser.ExtensionFilter("List Files:","*.html","*.json","*.txt");
-//        FileChooser.ExtensionFilter JSON = new FileChooser.ExtensionFilter("JSON","*.json");
-//        FileChooser.ExtensionFilter TSV = new FileChooser.ExtensionFilter("TSV","*.txt");
         fileChooser.getExtensionFilters().addAll(ext);
         Stage stage = new Stage();
         File file = fileChooser.showOpenDialog(stage);
 
         if(getExtension(file).equals("txt")){
-            loadTSV(file);
+            loadTSV(file,data);
+            table.setItems(data);
         }
         if(getExtension(file).equals("html")){
-            loadHTML(file);
+            loadHTML(file,data);
+            table.setItems(data);
         }
         if(getExtension(file).equals("json")){
-            loadJSON(file);
+            loadJSON(file,data);
+            table.setItems(data);
         }
         //read in data from file
         //update list with data
@@ -234,7 +226,7 @@ public class MainMenuController {
         //Update serial set with all values
     }
 
-    void loadTSV(File file){
+    void loadTSV(File file, ObservableList<InventoryItem> data){
         if(file!=null) {
             data.clear();
             try {
@@ -251,11 +243,10 @@ public class MainMenuController {
             } catch (IOException ex) {
                 Logger.getLogger(MainMenuController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            table.setItems(data);
         }
     }
 
-    void loadHTML(File file){
+    void loadHTML(File file, ObservableList<InventoryItem> data){
         if(file!=null) {
             data.clear();
             try {
@@ -288,11 +279,11 @@ public class MainMenuController {
             } catch (IOException ex) {
                 Logger.getLogger(MainMenuController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            table.setItems(data);
+//            table.setItems(data);
         }
     }
 
-    void loadJSON(File file){
+    void loadJSON(File file, ObservableList<InventoryItem> data){
         if(file!=null) {
             data.clear();
             try {
@@ -319,11 +310,12 @@ public class MainMenuController {
             } catch (IOException ex) {
                 Logger.getLogger(MainMenuController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            table.setItems(data);
+//            table.setItems(data);
         }
     }
 
     @FXML
+    //searches for value by name
     void updateSearchName(Event event) {
         //keep all values stored in list
         //make new list with part of the searched name
@@ -338,6 +330,7 @@ public class MainMenuController {
     }
 
     @FXML
+    //searches for value by serial
     void updateSearchSerial(Event event) {
         //same implementation as SearchName but with serial number
         ObservableList<InventoryItem> temp = FXCollections.observableArrayList();
@@ -357,6 +350,10 @@ public class MainMenuController {
         TableColumn serial = new TableColumn("Serial #");
         TableColumn value = new TableColumn("Value");
         table.getColumns().addAll(name,serial,value);
+
+        name.setPrefWidth(300);
+        serial.setPrefWidth(100);
+        value.setPrefWidth(100);
 
         name.setCellValueFactory(new PropertyValueFactory<InventoryItem,String>("name"));
         serial.setCellValueFactory(new PropertyValueFactory<InventoryItem,String>("serial"));
@@ -422,9 +419,9 @@ public class MainMenuController {
         });
 
         data = FXCollections.observableArrayList(
-                new InventoryItem("name1","serial1","1"),
-                new InventoryItem("name2","serial2","2"),
-                new InventoryItem("name3","serial3","3")
+//                new InventoryItem("name1","serial1","1"),
+//                new InventoryItem("name2","serial2","2"),
+//                new InventoryItem("name3","serial3","3")
         );
         table.setItems(data);
     }
